@@ -5,15 +5,33 @@ ui = None
 _handlers = []
 _skip_next_save = False
 
-PARAM = 'version_major'
+PARAM = 'version'
+PARAM_OLD = 'version_major'
 
 # ── Utility ──────────────────────────────────────────────
 
-def get_or_create_param(design):
-    p = design.userParameters.itemByName(PARAM)
+def get_or_create_param(design, initial_value=0):
+    params = design.userParameters
+    p = params.itemByName(PARAM)
     if p is None:
-        p = design.userParameters.add(PARAM, adsk.core.ValueInput.createByReal(1), '', 'Version')
+        old = params.itemByName(PARAM_OLD)
+        start_value = int(round(old.value)) if old else initial_value
+        p = params.add(PARAM, adsk.core.ValueInput.createByReal(start_value), '', 'Version')
+        if old:
+            old.deleteMe()
     return p
+
+# ── Document open: crea il parametro subito ───────────────
+
+class OnActivateHandler(adsk.core.DocumentEventHandler):
+    def notify(self, args):
+        try:
+            design = args.document.products.itemByProductType('DesignProductType')
+            if design is None:
+                return
+            get_or_create_param(design, initial_value=0)
+        except:
+            pass  # silenzioso, non rompere l'apertura del file
 
 # ── Save handler ─────────────────────────────────────────
 
@@ -27,7 +45,7 @@ class OnSaveHandler(adsk.core.DocumentEventHandler):
             design = args.document.products.itemByProductType('DesignProductType')
             if design is None:
                 return
-            p = get_or_create_param(design)
+            p = get_or_create_param(design, initial_value=0)
             p.expression = str(int(round(p.value)) + 1)
         except:
             if ui:
@@ -57,9 +75,9 @@ class ResetExecute(adsk.core.CommandEventHandler):
                 adsk.core.MessageBoxIconTypes.WarningIconType
             )
             if result == adsk.core.DialogResults.DialogYes:
-                p.expression = '1'
+                p.expression = '0'
                 _skip_next_save = True
-                ui.messageBox('Reset to v1 complete.\n\nSave the file to confirm.')
+                ui.messageBox('Reset complete.\n\nSave the file to confirm: version will become v1.')
         except:
             ui.messageBox(traceback.format_exc())
 
@@ -80,13 +98,17 @@ def run(context):
     app = adsk.core.Application.get()
     ui  = app.userInterface
 
-    h = OnSaveHandler()
-    app.documentSaving.add(h)
-    _handlers.append(h)
+    h_save = OnSaveHandler()
+    app.documentSaving.add(h_save)
+    _handlers.append(h_save)
+
+    h_open = OnActivateHandler()
+    app.documentActivated.add(h_open)
+    _handlers.append(h_open)
 
     panel = ui.allToolbarPanels.itemById('SolidScriptsAddinsPanel')
     add_button(panel, 'SmartVersionReset', 'Reset Version to 1',
-               'Reset version_major to 1', ResetCreated)
+               'Reset version to 1', ResetCreated)
 
 def stop(context):
     panel = ui.allToolbarPanels.itemById('SolidScriptsAddinsPanel')
