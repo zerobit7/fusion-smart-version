@@ -15,6 +15,7 @@ Every time you save, `version` increments by one — so you can embed the versio
 - **Reset command** — start fresh from 1 whenever you need to
 
 No cloud, no subscription, no fuss.
+![smartversionexample](https://github.com/user-attachments/assets/55e357c7-49c4-4089-a7db-3d7e8e2ffed5)
 
 ---
 
