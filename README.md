@@ -21,18 +21,19 @@ No cloud, no subscription, no fuss.
 
 ## Installation
 
-1. Download or clone this repository
-2. Copy the `SmartVersion` folder into:
-   ```
+1. Download the repository as a zip file (**Code → Download ZIP**)
+2. Unzip — inside you will find a `SmartVersion` folder
+3. Copy the `SmartVersion` folder into:
+```
    %appdata%\Autodesk\Autodesk Fusion 360\API\AddIns\
-   ```
+```
    On macOS:
-   ```
+```
    ~/Library/Application Support/Autodesk/Autodesk Fusion 360/API/AddIns/
-   ```
-3. In Fusion 360: **Utilities → Add-Ins → Scripts and Add-Ins**
-4. Select `SmartVersion` → click **Run**
-5. Optionally enable **Run on Startup** so it loads automatically
+```
+4. In Fusion 360: **Utilities → Add-Ins → Scripts and Add-Ins**
+5. Select `SmartVersion` → click **Run**
+6. Optionally enable **Run on Startup** so it loads automatically
 
 ---
 
