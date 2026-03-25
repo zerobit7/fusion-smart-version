@@ -1,0 +1,9 @@
+{
+  "autodeskProduct": "Fusion",
+  "type": "addin",
+  "id": "SmartVersion",
+  "author": "tu",
+  "description": { "": "Auto-increment version_number on save" },
+  "version": "1.0.0",
+  "runOnStartup": true
+}
