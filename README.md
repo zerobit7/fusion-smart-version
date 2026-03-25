@@ -73,7 +73,3 @@ The parameter is a plain unitless integer — you can reference it anywhere Fusi
 ## License
 
 MIT — do whatever you want with it.
-
----
-
-*Built because paying $5 for 20 lines of Python felt wrong.*
