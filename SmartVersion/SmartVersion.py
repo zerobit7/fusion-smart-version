@@ -106,7 +106,7 @@ class Export3MFExecute(adsk.core.CommandEventHandler):
                 filepath += '.3mf'
 
             export_mgr = design.exportManager
-            options = export_mgr.createC3MFExportOptions(filepath, design.rootComponent)
+            options = export_mgr.createC3MFExportOptions(design.rootComponent, filepath)
             export_mgr.execute(options)
 
             ui.messageBox(f'Exported successfully:\n{os.path.basename(filepath)}')
