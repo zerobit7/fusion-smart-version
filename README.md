@@ -49,6 +49,11 @@ No cloud, no subscription, no fuss.
 
 Every time you save, the number updates automatically.
 
+### Export 3MF with version
+
+**Utilities → Add-Ins → Export 3MF with version**
+
+Opens a save dialog with the filename already set to `documentname_v4.3mf`. You can change the path or filename before saving. The Fusion version suffix (e.g. `v6`) is automatically removed from the document name to avoid duplicates.
 ### Reset version
 
 **Utilities → Add-Ins → Reset Version to 1**
