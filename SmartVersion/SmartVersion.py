@@ -1,4 +1,4 @@
-import adsk.core, adsk.fusion, traceback
+import adsk.core, adsk.fusion, traceback, os, re
 
 app = None
 ui = None
@@ -7,8 +7,6 @@ _skip_next_save = False
 
 PARAM = 'version'
 PARAM_OLD = 'version_major'
-
-# ── Utility ──────────────────────────────────────────────
 
 def get_or_create_param(design, initial_value=0):
     params = design.userParameters
@@ -21,8 +19,6 @@ def get_or_create_param(design, initial_value=0):
             old.deleteMe()
     return p
 
-# ── Document open: crea il parametro subito ───────────────
-
 class OnActivateHandler(adsk.core.DocumentEventHandler):
     def notify(self, args):
         try:
@@ -31,9 +27,7 @@ class OnActivateHandler(adsk.core.DocumentEventHandler):
                 return
             get_or_create_param(design, initial_value=0)
         except:
-            pass  # silenzioso, non rompere l'apertura del file
-
-# ── Save handler ─────────────────────────────────────────
+            pass
 
 class OnSaveHandler(adsk.core.DocumentEventHandler):
     def notify(self, args):
@@ -50,8 +44,6 @@ class OnSaveHandler(adsk.core.DocumentEventHandler):
         except:
             if ui:
                 ui.messageBox('SmartVersion – save error:\n' + traceback.format_exc())
-
-# ── Comando: Reset ───────────────────────────────────────
 
 class ResetCreated(adsk.core.CommandCreatedEventHandler):
     def notify(self, args):
@@ -81,7 +73,46 @@ class ResetExecute(adsk.core.CommandEventHandler):
         except:
             ui.messageBox(traceback.format_exc())
 
-# ── Setup UI ──────────────────────────────────────────────
+class Export3MFCreated(adsk.core.CommandCreatedEventHandler):
+    def notify(self, args):
+        h = Export3MFExecute()
+        args.command.execute.add(h)
+        _handlers.append(h)
+
+class Export3MFExecute(adsk.core.CommandEventHandler):
+    def notify(self, args):
+        try:
+            design = app.activeProduct
+            if not isinstance(design, adsk.fusion.Design):
+                ui.messageBox('Please open a Design first.'); return
+
+            p = get_or_create_param(design)
+            version = int(round(p.value))
+            doc_name = app.activeDocument.name
+            doc_name_clean = re.sub(r'\s+v\d+$', '', doc_name).strip()
+            suggested_name = f"{doc_name_clean}_v{version}.3mf"
+
+            dialog = ui.createFileDialog()
+            dialog.title = 'Export 3MF with version'
+            dialog.filter = '3MF Files (*.3mf)'
+            dialog.initialFilename = suggested_name
+            dialog.isMultiSelectEnabled = False
+
+            if dialog.showSave() != adsk.core.DialogResults.DialogOK:
+                return
+
+            filepath = dialog.filename
+            if not filepath.lower().endswith('.3mf'):
+                filepath += '.3mf'
+
+            export_mgr = design.exportManager
+            options = export_mgr.createC3MFExportOptions(filepath, design.rootComponent)
+            export_mgr.execute(options)
+
+            ui.messageBox(f'Exported successfully:\n{os.path.basename(filepath)}')
+
+        except:
+            ui.messageBox('SmartVersion – export error:\n' + traceback.format_exc())
 
 def add_button(panel, cmd_id, label, tooltip, handler_created):
     defn = ui.commandDefinitions.itemById(cmd_id)
@@ -109,11 +140,14 @@ def run(context):
     panel = ui.allToolbarPanels.itemById('SolidScriptsAddinsPanel')
     add_button(panel, 'SmartVersionReset', 'Reset Version to 1',
                'Reset version to 1', ResetCreated)
+    add_button(panel, 'SmartVersionExport3MF', 'Export 3MF with version',
+               'Export 3MF with version number in filename', Export3MFCreated)
 
 def stop(context):
     panel = ui.allToolbarPanels.itemById('SolidScriptsAddinsPanel')
-    ctrl = panel.controls.itemById('SmartVersionReset')
-    if ctrl: ctrl.deleteMe()
-    defn = ui.commandDefinitions.itemById('SmartVersionReset')
-    if defn: defn.deleteMe()
+    for cmd_id in ['SmartVersionReset', 'SmartVersionExport3MF']:
+        ctrl = panel.controls.itemById(cmd_id)
+        if ctrl: ctrl.deleteMe()
+        defn = ui.commandDefinitions.itemById(cmd_id)
+        if defn: defn.deleteMe()
     _handlers.clear()
